@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/buildkite/go-buildkite/v2/buildkite"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -29,7 +30,14 @@ func main() {
 		log.Fatalf("fetch builds failed: %s", err)
 	}
 
+	var total float64
+	var count int
 	for _, build := range builds {
-		fmt.Printf("%v %v %v\n", build.CreatedAt.Format("2006-01-02 15:04:05"), build.FinishedAt.Sub(build.StartedAt.Time), *build.WebURL)
+		duration := build.FinishedAt.Sub(build.StartedAt.Time)
+		total += duration.Seconds()
+		fmt.Printf("%v %v %v\n", build.CreatedAt.Format("2006-01-02 15:04:05"), duration, *build.WebURL)
+		count++
 	}
+	parsedDuration, _ := time.ParseDuration(fmt.Sprintf("%fs", total/float64(count)))
+	fmt.Printf("Average: %s\n", parsedDuration)
 }
