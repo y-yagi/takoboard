@@ -13,6 +13,7 @@ var (
 	apiToken = kingpin.Flag("token", "API token").Required().OverrideDefaultFromEnvar("BUILDKITE_API_TOKEN").String()
 	branch   = kingpin.Flag("branch", "A branch name").Required().String()
 	debug    = kingpin.Flag("debug", "Enable debugging").Bool()
+	page     = kingpin.Flag("page", "Page of results to retrieve").Default("1").Int()
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 	}
 	client := buildkite.NewClient(config.Client())
 
-	opt := buildkite.BuildsListOptions{Branch: *branch, State: []string{"passed"}}
+	opt := buildkite.BuildsListOptions{Branch: *branch, State: []string{"passed"}, ListOptions: buildkite.ListOptions{Page: *page}}
 	builds, _, err := client.Builds.List(&opt)
 	if err != nil {
 		log.Fatalf("fetch builds failed: %s", err)
