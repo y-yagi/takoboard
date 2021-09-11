@@ -24,6 +24,7 @@ func main() {
 		log.Fatalf("client config failed: %s", err)
 	}
 	client := buildkite.NewClient(config.Client())
+	buildkite.SetHttpDebug(*debug)
 
 	opt := buildkite.BuildsListOptions{Branch: *branch, State: []string{"passed"}, ListOptions: buildkite.ListOptions{Page: *page}}
 	builds, _, err := client.Builds.List(&opt)
