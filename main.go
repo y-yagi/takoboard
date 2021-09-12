@@ -14,6 +14,7 @@ var (
 	branch   = kingpin.Flag("branch", "A branch name").Required().String()
 	debug    = kingpin.Flag("debug", "Enable debugging").Bool()
 	page     = kingpin.Flag("page", "Page of results to retrieve").Default("1").Int()
+	under    = kingpin.Flag("under", "Threshold of a build duration(under)").String()
 )
 
 func main() {
@@ -26,6 +27,14 @@ func main() {
 	client := buildkite.NewClient(config.Client())
 	buildkite.SetHttpDebug(*debug)
 
+	var underDuration time.Duration
+	if len(*under) != 0 {
+		underDuration, err = time.ParseDuration(*under)
+		if err != nil {
+			log.Fatalf("under parse error: %s", err)
+		}
+	}
+
 	opt := buildkite.BuildsListOptions{Branch: *branch, State: []string{"passed"}, ListOptions: buildkite.ListOptions{Page: *page}}
 	builds, _, err := client.Builds.List(&opt)
 	if err != nil {
@@ -36,6 +45,10 @@ func main() {
 	var count int
 	for _, build := range builds {
 		duration := build.FinishedAt.Sub(build.StartedAt.Time)
+		if len(*under) != 0 && duration > underDuration {
+			continue
+		}
+
 		total += duration.Seconds()
 		fmt.Printf("%v %v %v\n", build.CreatedAt.Format("2006-01-02 15:04:05"), duration, *build.WebURL)
 		count++
